@@ -1,0 +1,264 @@
+nav {
+  background-color: #4f46e5;
+  padding: 0.6rem 1rem;
+  display: flex;
+  justify-content: flex-end; /* Pushes nav links to the right */
+}
+
+.navbar {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar li {
+  margin-left: 1.2rem; /* spacing between items */
+}
+
+.navbar a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+  color: #c7d2fe;
+}
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f4ff;
+  color: #1e1b4b;
+}
+
+/* Header */
+header {
+  background-color: #4f46e5;
+  color: white;
+  text-align: center;
+  padding: 2rem 1rem;
+  border-bottom: 5px solid #fcd34d;
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+  font-size: 1.8rem;
+  text-shadow: 1px 1px 2px #1e1b4b;
+}
+
+/* Main Form Container */
+main {
+  max-width: 700px;
+  margin: 2rem auto;
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Labels & Inputs */
+form label {
+  display: block;
+  margin-top: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="file"],
+form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #f9fafb;
+  transition: border-color 0.2s;
+}
+
+form input:focus,
+form textarea:focus {
+  border-color: #4f46e5;
+  outline: none;
+}
+
+/* Textarea Styling */
+textarea {
+  resize: vertical;
+}
+
+/* Submit Button */
+form input[type="submit"] {
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 2rem;
+  background-color: #4f46e5;
+  color: white;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover {
+  background-color: #3730a3;
+}
+
+/* Image Preview */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  main {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+}
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafb;
+  color: #1e293b;
+}
+
+/* Navbar */
+nav {
+  background-color: #4f46e5;
+  padding: 1rem 2rem;
+}
+
+.navbar {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.navbar li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.navbar li a:hover {
+  color: #c7d2fe;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+              url('/images/hero.jpg') center/cover no-repeat;
+  color: white;
+  text-align: center;
+  padding: 6rem 2rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  background-color: #facc15;
+  color: #1e293b;
+  font-weight: bold;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+  background-color: #eab308;
+}
+
+/* Features Section */
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem 2rem;
+  background-color: #fff;
+}
+
+.feature-card {
+  background-color: #f1f5f9;
+  padding: 2rem;
+  width: 280px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-card h2 {
+  color: #4f46e5;
+  margin-bottom: 0.8rem;
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-card {
+    width: 90%;
+  }
+}

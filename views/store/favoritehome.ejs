@@ -1,0 +1,56 @@
+<%- include('../partials/head') %> 
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <ul class="navbar">
+        <li><a href="/">index-page</a></li>
+        <li><a href="/homes">Home list </a></li>
+        <li><a href="/favouritehome">favorite</a></li>
+        <li><a href="/booking-list">Booking List</a></li>
+        <li><a href="/host/hosthome">host home </a></li>
+        <li><a href="/host/add-home">Add Home</a></li>
+      </ul>
+    </nav>
+  <h1> the favorite item are present here </h1>
+    <!-- Main Heading -->
+      <main class="card-container">
+      
+    <% favoriteHomes.forEach(home => { %>
+      <div class="card">
+        <img src="<%= home.houseImages %>" alt="Images of <%= home.houseName %>">
+        <div class="card-content">
+          <h2><%= home.houseName %></h2>
+          <p><strong>Location:</strong> <%= home.location %></p>
+          <p><strong>Price/Day:</strong> ₹<%= home.pricePerDay %></p>
+          <p><strong>Nights:</strong> <%= home.numberOfNights %></p>
+          <p><strong>Rooms:</strong> <%= home.numberOfRooms %></p>
+          <p><strong>Facilities:</strong> <%= home.facilities %></p>
+          <p><strong>Rating:</strong>
+
+
+
+            <form action="/remove-from-favorite" method="POST" style="display:inline;">
+  <input type="hidden" name="id" value="<%= home.id %>">
+  <button class="remove-fav-btn" type="submit">💔 Remove from Favorite</button>
+</form>
+
+
+</p>
+<br> 
+          
+         
+
+
+
+      
+
+
+
+
+
+        
+      </div>
+    <% }) %>
+  </body>
+</html>

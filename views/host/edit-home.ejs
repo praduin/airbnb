@@ -1,0 +1,59 @@
+<%- include('../partials/homeeee') %>
+
+</head>
+<body>
+
+  <!-- Top navigation -->
+  <nav>
+    <ul class="navbar">
+      <li><a href="/">index-page</a></li>
+      <li><a href="/homes">Home list</a></li>
+      <li><a href="/favourites">Favorite Home</a></li>
+      <li><a href="/booking-list">Booking List</a></li>
+      <li><a href="/host/hosthome">Host Home</a></li>
+      <li><a href="/host/add-home">Add Home</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1><%= editing ? "Edit your home on airbnb " : "Register" %> your home on Airbnb</h1>
+  </header>
+
+  <main>
+    <!-- ✅ Correct form action URL for both edit and add -->
+   <form action="/host/<%= editing && home ? 'edit-home/' + home.id : 'add-home' %>" method="POST" enctype="multipart/form-data">
+
+      <% if (editing && home) { %>
+        <input type="hidden" name="id" value="<%= home.id %>">
+        <input type="hidden" name="existingImage" value="<%= home.houseImages %>">
+
+       
+      <% } %>
+
+      <label for="houseName">House Name</label>
+      <input type="text" id="houseName" name="houseName" placeholder="Enter house name" value="<%= editing && home ? home.houseName : '' %>" required>
+
+      <label for="pricePerDay">Price Per Day (INR)</label>
+      <input type="number" id="pricePerDay" name="pricePerDay" min="1" value="<%= editing && home ? home.pricePerDay : '' %>" required>
+
+      <label for="facilities">Facilities</label>
+      <textarea id="facilities" name="facilities" rows="4" placeholder="e.g. WiFi, AC, Parking" required><%= editing && home ? home.facilities : '' %></textarea>
+
+      <label for="numberOfRooms">Number of Rooms</label>
+      <input type="number" id="numberOfRooms" name="numberOfRooms" min="1" value="<%= editing && home ? home.numberOfRooms : '' %>" required>
+
+      <label for="location">Location</label>
+      <input type="text" id="location" name="location" placeholder="City, State" value="<%= editing && home ? home.location : '' %>" required>
+
+      <label for="houseImage">Upload House Image</label>
+      <input type="file" id="houseImage" name="houseImage" accept="image/*" <%= editing ? '' : 'required' %>>
+
+      <label for="numberOfNights">Number of Nights</label>
+      <input type="number" id="numberOfNights" name="numberOfNights" min="1" value="<%= editing && home ? home.numberOfNights : '' %>" required>
+
+      <input type="submit" value="<%= editing ? 'Update' : 'Submit' %>">
+    </form>
+  </main>
+
+</body>
+</html>

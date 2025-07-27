@@ -1,0 +1,37 @@
+<%- include('../partials/head') %> 
+  <body>
+    <nav>
+      <ul class="navbar">
+        <li><a href="/">index-page</a></li>
+        <li><a href="/homes">Home list </a></li>
+        <li><a href="/favouritehome">favorite</a></li>
+        <li><a href="/booking-list">Booking List</a></li>
+        <li><a href="/host/hosthome">host home </a></li>
+        <li><a href="/host/add-home">Add Home</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="card">
+        <img
+          src="/uploads/<%= home.houseImages %>"
+          alt="Image of <%= home.houseName %>"
+        />
+
+        <div class="card-content">
+          <h2><%= home.houseName %></h2>
+          <h2>Description</h2>
+          <p><strong>Location:</strong> <%= home.location %></p>
+          <p><strong>Price/Day:</strong> ₹<%= home.pricePerDay %></p>
+          <p><strong>Nights:</strong> <%= home.numberOfNights %></p>
+          <p><strong>Rooms:</strong> <%= home.numberOfRooms %></p>
+          <p><strong>Facilities:</strong> <%= home.facilities %></p>
+          <p><strong>Rating:</strong> <%= home.rating %> ⭐</p>
+          <div class="favoritemargin">
+            <%- include('../partials/favorite') %>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

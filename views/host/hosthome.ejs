@@ -1,0 +1,49 @@
+<%- include('../partials/head') %> 
+</head>
+<body>
+
+ <!-- Top Navbar -->
+<nav>
+    <ul class="navbar">
+       <li><a href="/">index-page</a></li>
+         <li><a href="/homes">Home list </a></li>
+       <li><a href="/favoritehome">Favorite</a></li>
+      <li><a href="/booking-list">Booking List</a></li>
+       <li><a href="/host/hosthome">host home </a></li>
+          <li><a href="/host/add-home">Add Home</a></li>
+       
+    </ul>
+  </nav>
+
+
+  <!-- Main Header -->
+   <header> <h1> your home display succesfully here </h1></header>
+   
+  <main class="card-container">
+    <% registeredHomes.forEach(home => { %>
+      <div class="card">
+       <img
+          src="/uploads/<%= home.houseImages %>"
+          alt="Image of <%= home.houseName %>"
+        />
+        <div class="card-content">
+          <h2><%= home.houseName %></h2>
+          <p><strong>Location:</strong> <%= home.location %></p>
+          <p><strong>Price/Day:</strong> ₹<%= home.pricePerDay %></p>
+          <p><strong>Nights:</strong> <%= home.numberOfNights %></p>
+          <p><strong>Rooms:</strong> <%= home.numberOfRooms %></p>
+          <p><strong>Facilities:</strong> <%= home.facilities %></p>
+         <a href="/host/edit-home/<%=home.id%>/?editing=true" class="btn-edit">Edit</a>
+      <form action="/host/delete-home/<%= home.id %>" method="POST">
+  <button class="btn-delete">🗑️ Delete</button>
+</form>
+          
+        </div>
+      </div>
+    <% }) %>
+  </main>
+  </main>
+</body>
+
+</html>
+
