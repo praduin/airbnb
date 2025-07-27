@@ -1,10 +1,22 @@
-const mysql = require("mysql2");
-const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "airbnb",
-  port: 3307,
-});
+// utils/databaseutil.js
+const mongo = require("mongodb");
+const mongoClient = mongo.MongoClient;
 
-module.exports = pool.promise();
+const url =
+  "mongodb+srv://praduin:root@completeairbnb.ki07pmq.mongodb.net/airbnb?retryWrites=true&w=majority&appName=completeairbnb";
+
+const mongoConnect = (callback) => {
+  mongoClient
+    .connect(url)
+    .then((client) => {
+      console.log("Connected to MongoDB");
+      callback(client);
+    })
+    .catch((err) => {
+      console.error("Failed to connect to MongoDB", err);
+    });
+};
+
+module.exports = {
+  mongoConnect,
+};

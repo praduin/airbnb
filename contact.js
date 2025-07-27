@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-
+const { mongoConnect } = require("./utils/databaseutil");
 const app = express();
 
 // Import your routers
@@ -29,6 +29,10 @@ app.get("/", (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on http://localhost:" + PORT);
+console.log("passed");
+mongoConnect((client) => {
+  console.log("connect to MongoDB");
+  app.listen(PORT, () => {
+    console.log("Server running on http://localhost:" + PORT);
+  });
 });
