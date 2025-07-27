@@ -28,9 +28,9 @@ app.get("/", (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 console.log("passed");
-mongoConnect((client) => {
+mongoConnect(() => {
   console.log("connect to MongoDB");
   app.listen(PORT, () => {
     console.log("Server running on http://localhost:" + PORT);

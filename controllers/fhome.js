@@ -13,7 +13,7 @@ exports.getAddHome = (req, res, next) => {
 };
 
 exports.getHome = (req, res, next) => {
-  Home.fetchAll().then(([registeredHomes]) => {
+  Home.fetchAll().then((registeredHomes) => {
     res.render("store/home-list", {
       registeredHomes,
       pageTitle: "Homes List",
@@ -23,7 +23,7 @@ exports.getHome = (req, res, next) => {
 };
 
 exports.postEditHome = async (req, res) => {
-  const homeId = req.params.homeId;
+  const _id = req.params._id;
 
   const houseName = req.body.houseName?.trim() || null;
   const facilities = req.body.facilities?.trim() || null;
@@ -39,15 +39,11 @@ exports.postEditHome = async (req, res) => {
     ? parseInt(req.body.numberOfNights)
     : null;
 
-  if (numberOfRooms === null) {
-    return res.status(400).send("Please enter a valid number of rooms.");
-  }
-
   const houseImages = req.file ? req.file.filename : req.body.existingImage;
 
   try {
     const home = new Home(
-      homeId,
+      _id, // Use _id for MongoDB
       houseName,
       numberOfNights,
       pricePerDay,
@@ -57,7 +53,9 @@ exports.postEditHome = async (req, res) => {
       houseImages
     );
 
-    await home.save();
+    home.save().then(() => {
+      console.log("home saved successfully");
+    });
     res.redirect("/host/hosthome");
   } catch (err) {
     console.error("Error updating home:", err);
@@ -66,7 +64,7 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Home.fetchAll().then(([registeredHomes]) => {
+  Home.fetchAll().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
       pageTitle: "All Homes",
@@ -76,7 +74,7 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.gethosthome = (req, res, next) => {
-  Home.fetchAll().then(([registeredHomes]) => {
+  Home.fetchAll().then((registeredHomes) => {
     res.render("host/hosthome", {
       registeredHomes,
       pageTitle: "Host Homes",
@@ -109,9 +107,9 @@ exports.getBookings = (req, res, next) => {
 
 exports.getfavrouited = (req, res, next) => {
   favorite.getFavorite((favoriteList) => {
-    Home.fetchAll().then(([registeredHomes]) => {
+    Home.fetchAll().then((registeredHomes) => {
       const favoriteHomes = registeredHomes.filter((home) =>
-        favoriteList.includes(home.id)
+        favoriteList.includes(_id)
       );
 
       res.render("store/favoritehome", {
@@ -124,14 +122,14 @@ exports.getfavrouited = (req, res, next) => {
 };
 
 exports.getHomeDetail = (req, res, next) => {
-  const homeId = req.params.homeId;
+  const _id = req.params._id;
 
-  if (!homeId) {
+  if (!_id) {
     return res.redirect("/");
   }
 
-  Home.findById(homeId)
-    .then(([rows]) => {
+  Home.findById(_id)
+    .then((rows) => {
       const hom = rows[0];
       if (!hom) {
         return res.redirect("/homes");
@@ -160,9 +158,9 @@ exports.postAddToFavorite = (req, res, next) => {
 };
 
 exports.postremoveFromFavorite = (req, res, next) => {
-  const homeId = req.body.id;
+  const _id = req.body._id;
 
-  favorite.removeFromFavorite(homeId, (err) => {
+  favorite.removeFromFavorite(_id, (err) => {
     if (err) {
       console.error("Failed to remove from favorites:", err);
       return res.redirect("/error");
@@ -172,10 +170,10 @@ exports.postremoveFromFavorite = (req, res, next) => {
 };
 
 exports.deletehomewithid = async (req, res, next) => {
-  const homeId = req.params.homeId;
+  const _id = req.params._id;
 
   try {
-    await Home.deleteById(homeId);
+    await Home.deleteById(_id);
     res.redirect("/host/hosthome");
   } catch (err) {
     console.error("Error in deleting:", err);
@@ -220,11 +218,11 @@ exports.getData = (req, res, next) => {
 };
 
 exports.getEditHome = async (req, res, next) => {
-  const homeId = req.params.homeId;
+  const _id = req.params._id;
   const editing = req.query.editing === "true";
 
   try {
-    const [rows] = await Home.findById(homeId);
+    const [rows] = await Home.findById(_id);
     const home = rows[0];
 
     if (!home) {
