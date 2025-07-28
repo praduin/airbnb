@@ -1,6 +1,25 @@
-const { getDB } = require("../utils/databaseutil");
 const { ObjectId } = require("mongodb");
+const mongose = require("mongoose");
+const Favorite = require("./favorite"); // Ensure this path is correct
+const homeshema = mongose.Schema({
+  houseName: { type: String, required: true },
+  location: { type: String, required: true },
+  numberOfRooms: { type: Number, required: true },
+  pricePerDay: { type: Number, required: true },
+  numberOfNights: { type: Number, required: true },
+  houseImages: { type: String, required: true },
+  facilities: { type: String }, // ✅ Optional but useful
+});
 
+homeshema.pre("findOneAndDelete", async function (next) {
+  const homeId = this.getQuery()["_id"];
+  await Favorite.deleteMany({ homeId: homeId });
+  next();
+});
+
+module.exports = mongose.model("Home", homeshema);
+
+/*
 class Home {
   constructor(
     id,
@@ -48,7 +67,7 @@ class Home {
   }
 
   // Fetch all homes
-  static fetchAll() {
+  static find() {
     const db = getDB();
     return db.collection("homes").find().toArray();
   }
@@ -67,5 +86,6 @@ class Home {
     return db.collection("homes").deleteOne({ _id: new ObjectId(homeId) });
   }
 }
+*/
 
-module.exports = Home;
+// module.exports = Home;

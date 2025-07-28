@@ -13,7 +13,7 @@ exports.getAddHome = (req, res, next) => {
 };
 
 exports.getHome = (req, res, next) => {
-  Home.fetchAll().then((registeredHomes) => {
+  Home.find().then((registeredHomes) => {
     res.render("store/home-list", {
       registeredHomes,
       pageTitle: "Homes List",
@@ -41,29 +41,33 @@ exports.postEditHome = async (req, res) => {
 
   const houseImages = req.file ? req.file.filename : req.body.existingImage;
 
-  try {
-    const home = new Home(
-      id, // ✅ Correctly pass homeId
-      houseName,
-      numberOfNights,
-      pricePerDay,
-      facilities,
-      numberOfRooms,
-      location,
-      houseImages
-    );
+  Home.findById(id)
+    .then((home) => {
+      home.houseName = houseName;
+      home.facilities = facilities;
+      home.location = location;
+      home.pricePerDay = pricePerDay;
+      home.numberOfRooms = numberOfRooms;
+      home.numberOfNights = numberOfNights;
+      home.houseImages = houseImages; // Use the new image or keep the existing one
 
-    await home.save();
-    console.log("Home updated successfully");
-    res.redirect("/host/hosthome");
-  } catch (err) {
-    console.error("Error updating home:", err);
-    res.status(500).send("Failed to update home");
-  }
+      home
+        .save()
+        .then(() => {
+          console.log("Home updated successfully");
+        })
+        .catch((err) => {
+          console.log("Error updating home:", err);
+        });
+      res.redirect("/host/hosthome");
+    })
+    .catch((err) => {
+      console.log("Error finding home:", err);
+    });
 };
 
 exports.getIndex = (req, res, next) => {
-  Home.fetchAll().then((registeredHomes) => {
+  Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
       pageTitle: "All Homes",
@@ -73,7 +77,7 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.gethosthome = (req, res, next) => {
-  Home.fetchAll().then((registeredHomes) => {
+  Home.find().then((registeredHomes) => {
     res.render("host/hosthome", {
       registeredHomes,
       pageTitle: "Host Homes",
@@ -83,7 +87,7 @@ exports.gethosthome = (req, res, next) => {
 };
 
 exports.homepage = (req, res, next) => {
-  Home.fetchAll()
+  Home.find()
     .then(([registeredHomes]) => {
       res.render("store/home-list", {
         registeredHomes,
@@ -105,21 +109,23 @@ exports.getBookings = (req, res, next) => {
 };
 
 exports.getfavrouited = (req, res, next) => {
-  Favorite.getFavorite().then((favoriteList) => {
-    favoriteList = favoriteList.map((fav) => fav.homeId.toString());
-    Home.fetchAll().then((registeredHomes) => {
-      console.log(favoriteList, registeredHomes);
-      const favoriteHomes = registeredHomes.filter((home) =>
-        favoriteList.includes(home._id.toString())
-      );
+  Favorite.find()
+    .populate("homeId")
+    .then((favoriteList) => {
+      const favoriteHomes = favoriteList
+        .map((fav) => fav.homeId)
+        .filter((home) => home !== null); // ✅ remove nulls
 
       res.render("store/favoritehome", {
         favoriteHomes,
         pageTitle: "My Favorites",
         currentPage: "favourites",
       });
+    })
+    .catch((err) => {
+      console.error("Error fetching favorites:", err);
+      res.status(500).send("Something went wrong");
     });
-  });
 };
 
 exports.getHomeDetail = (req, res, next) => {
@@ -148,25 +154,31 @@ exports.getHomeDetail = (req, res, next) => {
 exports.postAddToFavorite = (req, res, next) => {
   const homeId = req.body.id;
 
-  // Add safety check before proceeding
-  if (!homeId || !homeId.match(/^[a-fA-F0-9]{24}$/)) {
-    console.error("Invalid or missing homeId:", homeId);
-    return res.redirect("/homes");
-  }
+  Favorite.findOne({ homeId: homeId })
+    .then((existingFavorite) => {
+      if (existingFavorite) {
+        console.log("Home already in favorites:", homeId);
+        res.redirect("/favoritehome");
+        return null; // 🛑 Stop here, don’t go to next .then
+      }
 
-  const fav = new Favorite(homeId);
-  fav
-    .save()
+      const fav = new Favorite({ homeId: homeId });
+      return fav.save(); // only if not found
+    })
     .then((result) => {
-      console.log("Added to favorites:", result);
+      if (result) {
+        res.redirect("/favoritehome");
+      }
+      // else already redirected, do nothing
     })
     .catch((err) => {
-      console.error("Error adding to favorites:", err);
-    })
-    .finally(() => {
-      res.redirect("/favoritehome");
+      console.error("Error adding home to favorites:", err);
+      if (!res.headersSent) {
+        res.status(500).send("Failed to add to favorites");
+      }
     });
 };
+
 exports.postremoveFromFavorite = (req, res, next) => {
   const homeId = req.body.id;
 
@@ -175,7 +187,7 @@ exports.postremoveFromFavorite = (req, res, next) => {
     return res.redirect("/favoritehome");
   }
 
-  Favorite.removeFromFavorite(homeId)
+  Favorite.findOneAndDelete({ homeId: homeId })
     .then((result) => {
       console.log("Home removed:", result);
       res.redirect("/favoritehome");
@@ -189,7 +201,7 @@ exports.deletehomewithid = async (req, res, next) => {
   const homeId = req.params.homeId; // <- FIXED: match this with your route param
 
   try {
-    await Home.deleteById(homeId);
+    await Home.findByIdAndDelete(homeId);
     res.redirect("/host/hosthome");
   } catch (err) {
     console.error("Error in deleting:", err);
@@ -213,16 +225,15 @@ exports.getData = (req, res, next) => {
 
   const houseImages = req.file ? req.file.filename : null;
 
-  const home = new Home(
-    null, // New home, no id yet
+  const home = new Home({
     houseName,
-    numberOfNights,
-    pricePerDay,
-    facilities,
-    numberOfRooms,
     location,
-    houseImages
-  );
+    numberOfRooms,
+    pricePerDay,
+    numberOfNights,
+    houseImages,
+    facilities,
+  });
 
   home
     .save()

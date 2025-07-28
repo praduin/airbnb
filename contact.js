@@ -1,6 +1,7 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const path = require("path");
-const { mongoConnect } = require("./utils/databaseutil");
+
 const app = express();
 
 // Import your routers
@@ -29,10 +30,17 @@ app.get("/", (req, res) => {
 
 // Start server
 const PORT = 3000;
-console.log("passed");
-mongoConnect(() => {
-  console.log("connect to MongoDB");
-  app.listen(PORT, () => {
-    console.log("Server running on http://localhost:" + PORT);
+const dbpath =
+  "mongodb+srv://praduin:root@completeairbnb.ki07pmq.mongodb.net/airbnb?retryWrites=true&w=majority&appName=completeairbnb";
+mongoose
+  .connect(dbpath)
+  .then(() => {
+    console.log("Connected to MongoDB using Mongoose");
+    console.log("connect to MongoDB");
+    app.listen(PORT, () => {
+      console.log("Server running on http://localhost:" + PORT);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB using Mongoose", err);
   });
-});
