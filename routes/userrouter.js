@@ -10,7 +10,7 @@ const userRouter = express.Router();
 
 userRouter.get("/", controller.getIndex);
 userRouter.get("/homes", controller.getHome);
-userRouter.get("/favouritehome", controller.getfavrouited);
+userRouter.get("/favoritehome", controller.getfavrouited);
 userRouter.get("/booking-list", controller.getBookings);
 userRouter.get("/getIndex", controller.getfavrouited);
 userRouter.get("/homes/:homeId", controller.getHomeDetail);

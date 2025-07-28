@@ -1,4 +1,4 @@
-<%- include('../partials/head') %> 
+<%- include('../partials/fav') %> 
   </head>
   <body>
     <!-- Navigation -->
@@ -6,7 +6,7 @@
       <ul class="navbar">
         <li><a href="/">index-page</a></li>
         <li><a href="/homes">Home list </a></li>
-        <li><a href="/favouritehome">favorite</a></li>
+        <li><a href="/favoritehome">favorite</a></li>
         <li><a href="/booking-list">Booking List</a></li>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
@@ -14,11 +14,14 @@
     </nav>
   <h1> the favorite item are present here </h1>
     <!-- Main Heading -->
-      <main class="card-container">
-      
-    <% favoriteHomes.forEach(home => { %>
+   <main class="card-container">
+    <%favoriteHomes.forEach((home) => { %>
       <div class="card">
-        <img src="<%= home.houseImages %>" alt="Images of <%= home.houseName %>">
+        <img
+          src="/uploads/<%= home.houseImages %>"
+          alt="Image of <%= home.houseName %>"
+        />
+
         <div class="card-content">
           <h2><%= home.houseName %></h2>
           <p><strong>Location:</strong> <%= home.location %></p>
@@ -28,29 +31,17 @@
           <p><strong>Facilities:</strong> <%= home.facilities %></p>
           <p><strong>Rating:</strong>
 
+</p>
 
-
-            <form action="/remove-from-favorite" method="POST" style="display:inline;">
-  <input type="hidden" name="id" value="<%= home.id %>">
+  <form action="/remove-from-favorite" method="POST" style="display:inline;">
+  <input type="hidden" name="id" value="<%= home._id %>">
   <button class="remove-fav-btn" type="submit">💔 Remove from Favorite</button>
 </form>
-
-
-</p>
-<br> 
-          
-         
-
-
-
-      
-
-
-
-
-
-        
+<br>    
       </div>
+      </div>
+     
     <% }) %>
+     </main>
   </body>
 </html>

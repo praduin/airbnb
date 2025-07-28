@@ -1,19 +1,18 @@
-<%- include('../partials/head') %> 
-</head>
+<%- include('../partials/hostho') %> </head>
 <body>
 
  <!-- Top Navbar -->
-<nav>
-    <ul class="navbar">
-       <li><a href="/">index-page</a></li>
-         <li><a href="/homes">Home list </a></li>
-       <li><a href="/favoritehome">Favorite</a></li>
-      <li><a href="/booking-list">Booking List</a></li>
-       <li><a href="/host/hosthome">host home </a></li>
-          <li><a href="/host/add-home">Add Home</a></li>
-       
-    </ul>
-  </nav>
+    <nav>
+      <ul class="navbar">
+        <li><a href="/">index-page</a></li>
+        <li><a href="/homes">Home list </a></li>
+        <li><a href="/favoritehome">favorite</a></li>
+        <li><a href="/booking-list">Booking List</a></li>
+        <li><a href="/host/hosthome">host home </a></li>
+        <li><a href="/host/add-home">Add Home</a></li>
+      </ul>
+    </nav>
+
 
 
   <!-- Main Header -->
@@ -24,7 +23,7 @@
       <div class="card">
        <img
           src="/uploads/<%= home.houseImages %>"
-          alt="Image of <%= home.houseName %>"
+          alt="Image of <%= home.houseName %>" 
         />
         <div class="card-content">
           <h2><%= home.houseName %></h2>
@@ -33,8 +32,8 @@
           <p><strong>Nights:</strong> <%= home.numberOfNights %></p>
           <p><strong>Rooms:</strong> <%= home.numberOfRooms %></p>
           <p><strong>Facilities:</strong> <%= home.facilities %></p>
-         <a href="/host/edit-home/<%=home.id%>/?editing=true" class="btn-edit">Edit</a>
-      <form action="/host/delete-home/<%= home.id %>" method="POST">
+         <a href="/host/edit-home/<%=home._id%>/?editing=true" class="btn-edit">Edit</a>
+      <form action="/host/delete-home/<%= home._id %>" method="POST">
   <button class="btn-delete">🗑️ Delete</button>
 </form>
           

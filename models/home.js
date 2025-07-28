@@ -1,8 +1,9 @@
 const { getDB } = require("../utils/databaseutil");
 const { ObjectId } = require("mongodb");
+
 class Home {
   constructor(
-    _id,
+    id,
     houseName,
     numberOfNights,
     pricePerDay,
@@ -11,7 +12,7 @@ class Home {
     location,
     houseImages
   ) {
-    this._id = _id;
+    this._id = id ? new ObjectId(id) : null;
     this.houseName = houseName;
     this.numberOfNights = numberOfNights;
     this.pricePerDay = pricePerDay;
@@ -19,16 +20,31 @@ class Home {
     this.numberOfRooms = numberOfRooms;
     this.location = location;
     this.houseImages = houseImages;
-    if (!_id) {
-      console.log("Home created with ID:", _id);
-      this._id = _id; // Automatically generate an ID if not provided
-    }
   }
 
   // Insert or Update a Home
   save() {
     const db = getDB();
-    return db.collection("homes").insertOne(this);
+
+    const homeData = {
+      houseName: this.houseName,
+      numberOfNights: this.numberOfNights,
+      pricePerDay: this.pricePerDay,
+      facilities: this.facilities,
+      numberOfRooms: this.numberOfRooms,
+      location: this.location,
+      houseImages: this.houseImages,
+    };
+
+    if (this._id) {
+      // Update existing home
+      return db
+        .collection("homes")
+        .updateOne({ _id: this._id }, { $set: homeData });
+    } else {
+      // Insert new home
+      return db.collection("homes").insertOne(homeData);
+    }
   }
 
   // Fetch all homes
@@ -41,17 +57,15 @@ class Home {
   static findById(homeId) {
     console.log("findById called with homeId:", homeId);
     const db = getDB();
-    return db
-      .collection("homes")
-      .find({ _id: new ObjectId(String(homeId)) })
-      .next();
+    return db.collection("homes").findOne({ _id: new ObjectId(homeId) });
   }
 
   // Delete home by ID
-  static deleteById(homeId) {}
-
-  // Update home by ID (static method)
-  static updateById(id, updatedHome) {}
+  static deleteById(homeId) {
+    console.log("deleteById called with homeId:", homeId);
+    const db = getDB();
+    return db.collection("homes").deleteOne({ _id: new ObjectId(homeId) });
+  }
 }
 
 module.exports = Home;
