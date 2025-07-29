@@ -4,12 +4,18 @@
     <!-- Navigation -->
      <nav>
       <ul class="navbar">
+        
         <li><a href="/">index-page</a></li>
+        <% if(isloggedin) {%>
         <li><a href="/homes">Home list </a></li>
         <li><a href="/favoritehome">favorite</a></li>
         <li><a href="/booking-list">Booking List</a></li>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
+         <li><a href="/logout">logout</a></li>
+        <% }  else {%> 
+            <li><a href="/userlogin"> login</a></li>
+            <% } %>
       </ul>
     </nav>
 
@@ -17,7 +23,7 @@
     <header class="hero">
       <h1>Welcome to airbnb </h1>
       <p>Discover beautiful homes, book your stay, and save your favourites.</p>
-      <a href="/host/add-home" class="cta-button">Register Your Home</a>
+     <%if(isloggedin){%>  <a href="/host/add-home"<% } else { %> <a href="/userlogin"  <% } %> class="cta-button">Register Your Home</a>
     </header>
 
     <!-- Featured Section (Optional) -->

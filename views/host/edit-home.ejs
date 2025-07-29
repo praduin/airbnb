@@ -12,6 +12,7 @@
         <li><a href="/booking-list">Booking List</a></li>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
+         
       </ul>
     </nav>
   <header>
@@ -20,7 +21,7 @@
 
   <main>
     <!-- ✅ Correct form action URL for both edit and add -->
-<form action="/host/<%= editing && home ? 'edit-home/' + home._id : 'add-home' %>" method="POST" enctype="multipart/form-data">
+<form action="/host/<%= editing && home ? 'edit-home/' + home._id :'add-home' %>" method="POST" enctype="multipart/form-data">
 
 
       <% if (editing && home) { %>

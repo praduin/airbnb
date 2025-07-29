@@ -3,7 +3,7 @@ const path = require("path");
 const controller = require("../controllers/fhome");
 const express = require("express");
 const rootDir = require("../utils/pathUtil");
-const { registeredHomes } = require("../controllers/fhome");
+
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 const userRouter = express.Router();

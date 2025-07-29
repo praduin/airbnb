@@ -1,16 +1,34 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
+const session = require("express-session");
 
 const app = express();
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 // Import your routers
 const hostRouter = require("./routes/hostrouter");
 const userRouter = require("./routes/userrouter");
+const loginRouter = require("./routes/login");
+const dbpath =
+  "mongodb+srv://praduin:root@completeairbnb.ki07pmq.mongodb.net/airbnb?retryWrites=true&w=majority&appName=completeairbnb";
 
 // Middleware to parse form data
 app.use(express.urlencoded({ extended: false }));
 
+const store = new MongoDBStore({
+  uri: dbpath,
+  collection: "session",
+});
+
+app.use(
+  session({
+    secret: "your-secret-key", // Use a strong secret in production
+    resave: false,
+    saveUninitialized: false,
+    store,
+  })
+);
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // ✅ serve uploaded images
@@ -19,7 +37,18 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // ✅ ser
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+app.use((req, res, next) => {
+  req.isloggedin = req.session.isloggedin;
+  next();
+});
+app.use("/host", (req, res, next) => {
+  if (req.isloggedin) {
+    next();
+  } else res.redirect("/userlogin");
+});
+
 // Use host routes
+app.use(loginRouter);
 app.use(userRouter);
 app.use("/host", hostRouter);
 
@@ -30,8 +59,7 @@ app.get("/", (req, res) => {
 
 // Start server
 const PORT = 3000;
-const dbpath =
-  "mongodb+srv://praduin:root@completeairbnb.ki07pmq.mongodb.net/airbnb?retryWrites=true&w=majority&appName=completeairbnb";
+
 mongoose
   .connect(dbpath)
   .then(() => {

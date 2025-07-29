@@ -6,6 +6,7 @@ const Favorite = require("../models/favorite");
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
+    isloggedin: req.isloggedin,
     pageTitle: "Add Home to Airbnb",
     currentPage: "addhome",
     editing: false,
@@ -16,6 +17,7 @@ exports.getHome = (req, res, next) => {
   Home.find().then((registeredHomes) => {
     res.render("store/home-list", {
       registeredHomes,
+      isloggedin: req.isloggedin,
       pageTitle: "Homes List",
       currentPage: "home",
     });
@@ -59,7 +61,11 @@ exports.postEditHome = async (req, res) => {
         .catch((err) => {
           console.log("Error updating home:", err);
         });
-      res.redirect("/host/hosthome");
+      res.redirect("/host/hosthome", {
+        isloggedin: req.isloggedin,
+      });
+      {
+      }
     })
     .catch((err) => {
       console.log("Error finding home:", err);
@@ -67,9 +73,11 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
+  console.log("session value", req.session);
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
+      isloggedin: req.isloggedin,
       pageTitle: "All Homes",
       currentPage: "home",
     });
@@ -80,6 +88,7 @@ exports.gethosthome = (req, res, next) => {
   Home.find().then((registeredHomes) => {
     res.render("host/hosthome", {
       registeredHomes,
+      isloggedin: req.isloggedin,
       pageTitle: "Host Homes",
       currentPage: "hosthome",
     });
@@ -91,6 +100,7 @@ exports.homepage = (req, res, next) => {
     .then(([registeredHomes]) => {
       res.render("store/home-list", {
         registeredHomes,
+        isloggedin: req.isloggedin,
         pageTitle: "All Homes",
         currentPage: "home",
       });
@@ -104,6 +114,8 @@ exports.homepage = (req, res, next) => {
 exports.getBookings = (req, res, next) => {
   res.render("store/booking", {
     pageTitle: "My Bookings",
+    isloggedin: false,
+    isloggedin: req.isloggedin,
     currentPage: "bookings",
   });
 };
@@ -117,7 +129,9 @@ exports.getfavrouited = (req, res, next) => {
         .filter((home) => home !== null); // ✅ remove nulls
 
       res.render("store/favoritehome", {
+        isloggedin: req.isloggedin,
         favoriteHomes,
+        isloggedin: false,
         pageTitle: "My Favorites",
         currentPage: "favourites",
       });
@@ -141,6 +155,7 @@ exports.getHomeDetail = (req, res, next) => {
         return res.redirect("/homes");
       }
       res.render("store/home-detail", {
+        isloggedin: req.isloggedin,
         home: hom,
         pageTitle: "Home Detail",
         currentPage: "home",
@@ -158,7 +173,7 @@ exports.postAddToFavorite = (req, res, next) => {
     .then((existingFavorite) => {
       if (existingFavorite) {
         console.log("Home already in favorites:", homeId);
-        res.redirect("/favoritehome");
+        res.redirect("/favoritehome", { isloggedin: req.isloggedin });
         return null; // 🛑 Stop here, don’t go to next .then
       }
 
@@ -167,7 +182,9 @@ exports.postAddToFavorite = (req, res, next) => {
     })
     .then((result) => {
       if (result) {
-        res.redirect("/favoritehome");
+        res.redirect("/favoritehome", {
+          isloggedin: req.isloggedin,
+        });
       }
       // else already redirected, do nothing
     })
@@ -184,13 +201,15 @@ exports.postremoveFromFavorite = (req, res, next) => {
 
   if (!homeId || !homeId.match(/^[a-f\d]{24}$/i)) {
     console.error("Invalid homeId:", homeId);
-    return res.redirect("/favoritehome");
+    return res.redirect("/favoritehome", {
+      isloggedin: req.isloggedin,
+    });
   }
 
   Favorite.findOneAndDelete({ homeId: homeId })
     .then((result) => {
       console.log("Home removed:", result);
-      res.redirect("/favoritehome");
+      res.redirect("/favoritehome", { isloggedin: req.isloggedin });
     })
     .catch((err) => {
       console.error("Error removing home:", err);
@@ -202,7 +221,9 @@ exports.deletehomewithid = async (req, res, next) => {
 
   try {
     await Home.findByIdAndDelete(homeId);
-    res.redirect("/host/hosthome");
+    res.redirect("/host/hosthome", {
+      isloggedin: req.isloggedin,
+    });
   } catch (err) {
     console.error("Error in deleting:", err);
     res.status(500).send("Failed to delete home.");
@@ -237,7 +258,7 @@ exports.getData = (req, res, next) => {
 
   home
     .save()
-    .then(() => res.redirect("/host/hosthome"))
+    .then(() => res.redirect("/homes"))
     .catch((err) => {
       console.error("Error saving home:", err);
       res.status(500).send("Something went wrong");
@@ -248,7 +269,9 @@ exports.getEditHome = (req, res, next) => {
   const homeId = req.params.homeId; // ✅ CORRECT param
 
   if (!homeId) {
-    return res.redirect("/host/hosthome");
+    return res.redirect("/host/hosthome", {
+      isloggedin: req.isloggedin,
+    });
   }
 
   console.log("findById called with homeId:", homeId);
@@ -256,11 +279,14 @@ exports.getEditHome = (req, res, next) => {
   Home.findById(homeId)
     .then((home) => {
       if (!home) {
-        return res.redirect("/host/hosthome");
+        return res.redirect("/host/hosthome", {
+          isloggedin: req.isloggedin,
+        });
       }
 
       res.render("host/edit-home", {
         home,
+        isloggedin: req.isloggedin,
         pageTitle: "Edit Home",
         currentPage: "hosthome",
         editing: req.query.editing === "true", // ✅ use query param
@@ -270,4 +296,31 @@ exports.getEditHome = (req, res, next) => {
       console.error("Error fetching home for edit:", err);
       res.status(500).send("Failed to load home for editing");
     });
+};
+
+exports.getLogin = (req, res, next) => {
+  res.render("auth/userlogin", {
+    pageTitle: "User Login",
+    currentPage: "userlogin",
+    isloggedin: false,
+  });
+};
+exports.logindones = (req, res, next) => {
+  req.session.isloggedin = true;
+  res.render("store/index", {
+    isloggedin: req.isloggedin,
+    currentPage: "userlogin",
+  });
+};
+
+exports.logout = (req, res, next) => {
+  res.cookie("isloggedin", false);
+  res.render("auth/userlogin", { pageTitle: "User Login" });
+};
+exports.postlogout = (req, res, next) => {
+  {
+    req.sesson.destroy(() => {
+      res.redirect("/index");
+    });
+  }
 };
