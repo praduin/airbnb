@@ -23,9 +23,8 @@ exports.getHome = (req, res, next) => {
     });
   });
 };
-
 exports.postEditHome = async (req, res) => {
-  const id = req.params.homeId; // ✅ Correct param name
+  const id = req.params.homeId;
 
   const houseName = req.body.houseName?.trim() || null;
   const facilities = req.body.facilities?.trim() || null;
@@ -43,36 +42,38 @@ exports.postEditHome = async (req, res) => {
 
   const houseImages = req.file ? req.file.filename : req.body.existingImage;
 
-  Home.findById(id)
-    .then((home) => {
-      home.houseName = houseName;
-      home.facilities = facilities;
-      home.location = location;
-      home.pricePerDay = pricePerDay;
-      home.numberOfRooms = numberOfRooms;
-      home.numberOfNights = numberOfNights;
-      home.houseImages = houseImages; // Use the new image or keep the existing one
+  try {
+    const home = await Home.findById(id);
 
-      home
-        .save()
-        .then(() => {
-          console.log("Home updated successfully");
-        })
-        .catch((err) => {
-          console.log("Error updating home:", err);
-        });
-      res.redirect("/host/hosthome", {
-        isloggedin: req.isloggedin,
-      });
-      {
-      }
-    })
-    .catch((err) => {
-      console.log("Error finding home:", err);
-    });
+    if (!home) {
+      console.error("Home not found for ID:", id);
+      return res.redirect("/host/hosthome");
+    }
+
+    home.houseName = houseName;
+    home.facilities = facilities;
+    home.location = location;
+    home.pricePerDay = pricePerDay;
+    home.numberOfRooms = numberOfRooms;
+    home.numberOfNights = numberOfNights;
+    home.houseImages = houseImages;
+
+    await home.save();
+
+    console.log("Home updated successfully");
+    res.redirect("/host/hosthome");
+  } catch (err) {
+    console.error("Error updating home:", err);
+    res.status(500).send("Failed to update home");
+  }
 };
 
 exports.getIndex = (req, res, next) => {
+  if (!res.isloggedin) {
+    console.log("thiis is in sign in page ");
+    return res.redirect("/auth/userlogin");
+  }
+
   console.log("session value", req.session);
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
@@ -129,7 +130,6 @@ exports.getfavrouited = (req, res, next) => {
         .filter((home) => home !== null); // ✅ remove nulls
 
       res.render("store/favoritehome", {
-        isloggedin: req.isloggedin,
         favoriteHomes,
         isloggedin: false,
         pageTitle: "My Favorites",
@@ -169,24 +169,21 @@ exports.getHomeDetail = (req, res, next) => {
 exports.postAddToFavorite = (req, res, next) => {
   const homeId = req.body.id;
 
-  Favorite.findOne({ homeId: homeId })
+  Favorite.findOne({ homeId })
     .then((existingFavorite) => {
       if (existingFavorite) {
         console.log("Home already in favorites:", homeId);
-        res.redirect("/favoritehome", { isloggedin: req.isloggedin });
-        return null; // 🛑 Stop here, don’t go to next .then
+        return res.redirect("/favoritehome"); // ❌ Removed second argument
       }
 
-      const fav = new Favorite({ homeId: homeId });
-      return fav.save(); // only if not found
+      const fav = new Favorite({ homeId });
+      return fav.save();
     })
     .then((result) => {
       if (result) {
-        res.redirect("/favoritehome", {
-          isloggedin: req.isloggedin,
-        });
+        return res.redirect("/favoritehome");
       }
-      // else already redirected, do nothing
+      // Already redirected if it existed
     })
     .catch((err) => {
       console.error("Error adding home to favorites:", err);
@@ -201,15 +198,13 @@ exports.postremoveFromFavorite = (req, res, next) => {
 
   if (!homeId || !homeId.match(/^[a-f\d]{24}$/i)) {
     console.error("Invalid homeId:", homeId);
-    return res.redirect("/favoritehome", {
-      isloggedin: req.isloggedin,
-    });
+    return res.redirect("/favoritehome", {});
   }
 
   Favorite.findOneAndDelete({ homeId: homeId })
     .then((result) => {
       console.log("Home removed:", result);
-      res.redirect("/favoritehome", { isloggedin: req.isloggedin });
+      res.redirect("/favoritehome");
     })
     .catch((err) => {
       console.error("Error removing home:", err);
@@ -221,9 +216,7 @@ exports.deletehomewithid = async (req, res, next) => {
 
   try {
     await Home.findByIdAndDelete(homeId);
-    res.redirect("/host/hosthome", {
-      isloggedin: req.isloggedin,
-    });
+    res.redirect("/host/hosthome");
   } catch (err) {
     console.error("Error in deleting:", err);
     res.status(500).send("Failed to delete home.");
@@ -269,9 +262,7 @@ exports.getEditHome = (req, res, next) => {
   const homeId = req.params.homeId; // ✅ CORRECT param
 
   if (!homeId) {
-    return res.redirect("/host/hosthome", {
-      isloggedin: req.isloggedin,
-    });
+    return res.redirect("/host/hosthome");
   }
 
   console.log("findById called with homeId:", homeId);
@@ -279,14 +270,12 @@ exports.getEditHome = (req, res, next) => {
   Home.findById(homeId)
     .then((home) => {
       if (!home) {
-        return res.redirect("/host/hosthome", {
-          isloggedin: req.isloggedin,
-        });
+        return res.redirect("/host/hosthome");
       }
 
       res.render("host/edit-home", {
         home,
-        isloggedin: req.isloggedin,
+
         pageTitle: "Edit Home",
         currentPage: "hosthome",
         editing: req.query.editing === "true", // ✅ use query param
@@ -306,20 +295,27 @@ exports.getLogin = (req, res, next) => {
   });
 };
 exports.logindones = (req, res, next) => {
-  req.session.isloggedin = true;
-  res.render("store/index", {
-    isloggedin: req.isloggedin,
-    currentPage: "userlogin",
+  res.cookie("isloggedin", true);
+
+  req.session.save((err) => {
+    if (err) {
+      console.log("Session save error:", err);
+      return res.redirect("/");
+    }
+
+    res.redirect("/"); // or wherever your home page is
   });
 };
 
 exports.logout = (req, res, next) => {
-  res.cookie("isloggedin", false);
-  res.render("auth/userlogin", { pageTitle: "User Login" });
+  req.session.destroy((err) => {
+    if (err) console.log("Error destroying session:", err);
+    res.redirect("/userlogin");
+  });
 };
 exports.postlogout = (req, res, next) => {
   {
-    req.sesson.destroy(() => {
+    req.session.destroy(() => {
       res.redirect("/index");
     });
   }

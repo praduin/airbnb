@@ -116,3 +116,54 @@ nav {
     max-width: 300px;
   }
 }
+
+/* home-detail.css */
+
+main {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  background-color: #f4f4f4;
+  min-height: 100vh;
+}
+
+.card {
+  max-width: 900px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+  width: 100%;
+  height: 450px;
+  object-fit: cover;
+  border-bottom: 1px solid #ddd;
+}
+
+.card-content {
+  padding: 24px 32px;
+}
+
+.card-content h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.card-content p {
+  font-size: 18px;
+  color: #555;
+  margin: 8px 0;
+}
+
+.card-content p strong {
+  color: #222;
+}
+
+.favoritemargin {
+  margin-top: 24px;
+}
