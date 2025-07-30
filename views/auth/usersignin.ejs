@@ -1,0 +1,161 @@
+<%- include('../partials/head') %>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+
+  .signup-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .signup-container h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 1rem;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .row .form-group {
+    flex: 1;
+  }
+
+  .divider {
+    margin: 1.5rem 0;
+    border-top: 1px solid #ddd;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    background-color: #007BFF;
+    color: #fff;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+
+  .error-box {
+    background: #ffe5e5;
+    color: #b30000;
+    border: 1px solid #ffb3b3;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .error-box ul {
+    list-style: disc inside;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+<body>
+  <div class="signup-container">
+    <h2>Create Your Account</h2>
+
+    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+      <div class="error-box">
+        <ul>
+          <% errors.forEach(error => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form action="/signindone" method="POST">
+      <div class="form-group">
+        <label for="Name">Name</label>
+       <input
+  type="text"
+  id="username"
+  name="username"
+  value="<%= oldInput.username || '' %>"
+  placeholder="Enter your username"
+  required
+/>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="email" value="<%= oldInput?.email || '' %>" />
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label for="confirmpassword">Confirm Password</label>
+          <input type="password" id="confirmpassword" name="confirmpassword" placeholder="Confirm your password" required minlength="6" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+          <option value="">Select role</option>
+          <option value="guest" <%= oldInput?.role === 'guest' ? 'selected' : '' %>>Guest</option>
+          <option value="host" <%= oldInput?.role === 'host' ? 'selected' : '' %>>Host</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">About You</label>
+        <textarea id="description" name="description" placeholder="Tell us about yourself..." rows="4"><%= oldInput?.description || '' %></textarea>
+      </div>
+
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+</body>
+</html>

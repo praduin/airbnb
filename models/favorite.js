@@ -1,11 +1,14 @@
 const mongoose = require("mongoose");
 
 const favoriteSchema = mongoose.Schema({
-  homeId: {
-    type: mongoose.Schema.Types.ObjectId, // Use ObjectId for homeId
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
-    unique: true, // Refere
-    // nce to the Home model
+    ref: "User",
+  },
+  homeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
     ref: "Home",
   },
 });

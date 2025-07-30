@@ -1,8 +1,10 @@
 const Home = require("../models/home");
 const multer = require("multer");
-
+const bcrypt = require("bcryptjs");
+const User = require("../models/signin");
 const upload = multer({ dest: "uploads/" }); // ✅ fixed typo: "uplaods" -> "uploads"
 const Favorite = require("../models/favorite");
+const { check } = require("express-validator");
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
@@ -14,10 +16,15 @@ exports.getAddHome = (req, res, next) => {
 };
 
 exports.getHome = (req, res, next) => {
+  if (!req.session.isloggedin) {
+    console.log("thiis is in sign in page ");
+    return res.redirect("/userlogin");
+  }
+
   Home.find().then((registeredHomes) => {
     res.render("store/home-list", {
       registeredHomes,
-      isloggedin: req.isloggedin,
+      isloggedin: req.session.isloggedin,
       pageTitle: "Homes List",
       currentPage: "home",
     });
@@ -69,16 +76,11 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  if (!res.isloggedin) {
-    console.log("thiis is in sign in page ");
-    return res.redirect("/auth/userlogin");
-  }
-
   console.log("session value", req.session);
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
-      isloggedin: req.isloggedin,
+      isloggedin: req.session.isloggedin,
       pageTitle: "All Homes",
       currentPage: "home",
     });
@@ -97,6 +99,11 @@ exports.gethosthome = (req, res, next) => {
 };
 
 exports.homepage = (req, res, next) => {
+  if (!req.session.isloggedin) {
+    console.log("thiis is in sign in page ");
+    return res.redirect("/userlogin");
+  }
+
   Home.find()
     .then(([registeredHomes]) => {
       res.render("store/home-list", {
@@ -113,6 +120,11 @@ exports.homepage = (req, res, next) => {
 };
 
 exports.getBookings = (req, res, next) => {
+  if (!req.session.isloggedin) {
+    console.log("thiis is in sign in page ");
+    return res.redirect("/userlogin");
+  }
+
   res.render("store/booking", {
     pageTitle: "My Bookings",
     isloggedin: false,
@@ -120,18 +132,23 @@ exports.getBookings = (req, res, next) => {
     currentPage: "bookings",
   });
 };
-
 exports.getfavrouited = (req, res, next) => {
-  Favorite.find()
+  if (!req.session.isloggedin || !req.session.user) {
+    return res.redirect("/userlogin");
+  }
+
+  const userId = req.session.user._id;
+
+  Favorite.find({ userId })
     .populate("homeId")
     .then((favoriteList) => {
       const favoriteHomes = favoriteList
         .map((fav) => fav.homeId)
-        .filter((home) => home !== null); // ✅ remove nulls
+        .filter((home) => home !== null);
 
       res.render("store/favoritehome", {
         favoriteHomes,
-        isloggedin: false,
+        isloggedin: true,
         pageTitle: "My Favorites",
         currentPage: "favourites",
       });
@@ -154,6 +171,7 @@ exports.getHomeDetail = (req, res, next) => {
       if (!hom) {
         return res.redirect("/homes");
       }
+
       res.render("store/home-detail", {
         isloggedin: req.isloggedin,
         home: hom,
@@ -167,29 +185,31 @@ exports.getHomeDetail = (req, res, next) => {
     });
 };
 exports.postAddToFavorite = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect("/userlogin");
+  }
+
+  const userId = req.session.user._id;
   const homeId = req.body.id;
 
-  Favorite.findOne({ homeId })
+  Favorite.findOne({ homeId, userId })
     .then((existingFavorite) => {
       if (existingFavorite) {
-        console.log("Home already in favorites:", homeId);
-        return res.redirect("/favoritehome"); // ❌ Removed second argument
+        console.log("Home already in favorites for this user");
+        return res.redirect("/favoritehome");
       }
 
-      const fav = new Favorite({ homeId });
+      const fav = new Favorite({ homeId, userId });
       return fav.save();
     })
     .then((result) => {
       if (result) {
         return res.redirect("/favoritehome");
       }
-      // Already redirected if it existed
     })
     .catch((err) => {
-      console.error("Error adding home to favorites:", err);
-      if (!res.headersSent) {
-        res.status(500).send("Failed to add to favorites");
-      }
+      console.error("Error adding to favorites:", err);
+      res.status(500).send("Failed to add to favorites");
     });
 };
 
@@ -288,35 +308,190 @@ exports.getEditHome = (req, res, next) => {
 };
 
 exports.getLogin = (req, res, next) => {
+  console.log("you are locate in userlogin ");
   res.render("auth/userlogin", {
     pageTitle: "User Login",
+    errors: [],
     currentPage: "userlogin",
     isloggedin: false,
   });
-};
-exports.logindones = (req, res, next) => {
-  res.cookie("isloggedin", true);
+}; // GET /userlogin
 
-  req.session.save((err) => {
-    if (err) {
-      console.log("Session save error:", err);
-      return res.redirect("/");
+/// POST /logindone
+exports.logindones = async (req, res, next) => {
+  const { email, username } = req.body;
+
+  try {
+    const user = await User.findOne({ email, username });
+
+    if (!user) {
+      return res.status(422).render("auth/userlogin", {
+        pageTitle: "login",
+        currentPage: "login",
+        isloggedin: false,
+        errors: ["User does not exist"],
+        oldInput: { email, username },
+      });
     }
 
-    res.redirect("/"); // or wherever your home page is
-  });
+    req.session.isloggedin = true;
+    req.session.user = user; // ✅ store full user in session
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.redirect("/userlogin");
+      }
+
+      res.redirect("/");
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.redirect("/userlogin");
+  }
 };
 
+// GET /logout
 exports.logout = (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) console.log("Error destroying session:", err);
+  req.session.isloggedin = false;
+
+  req.session.save((err) => {
+    if (err) console.log("Session save error:", err);
+
+    // ✅ Clear the cookie
+    res.cookie("isloggedin", false, {
+      httpOnly: true,
+      errors: [],
+      expires: new Date(0), // clear cookie
+    });
+
     res.redirect("/userlogin");
   });
 };
+
+// POST /logout (if you're using POST for logout)
 exports.postlogout = (req, res, next) => {
-  {
-    req.session.destroy(() => {
-      res.redirect("/index");
+  req.session.destroy(() => {
+    res.cookie("isloggedin", false, {
+      httpOnly: true,
+      expires: new Date(0),
     });
-  }
+
+    res.render("host/index", {
+      errors: [],
+    });
+  });
 };
+
+exports.usersignin = (req, res, next) => {
+  console.log("You are on the login page");
+  res.render("auth/usersignin", {
+    pageTitle: "User Login",
+    isloggedin: false,
+    currentPage: "userlogin",
+    errors: [],
+    oldInput: {
+      username: "",
+      email: "",
+      password: "",
+      confirmpassword: "",
+      role: "",
+      description: "",
+    },
+  });
+};
+
+const { body, validationResult } = require("express-validator");
+//const Home = require("../models/home"); // Make sure this model exists
+exports.signindone = [
+  // Name Validation
+  check("username")
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage("Name should contain at least 2 letters")
+    .matches(/^[A-Za-z\s]+$/)
+    .withMessage("Name must contain only letters and spaces"),
+
+  // Email Validation
+  check("email")
+    .isEmail()
+    .withMessage("Please enter a valid email address")
+    .normalizeEmail(),
+
+  // Password Validation
+  check("password")
+    .trim()
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+
+  // Confirm Password
+  body("confirmpassword")
+    .trim()
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Passwords do not match");
+      }
+      return true;
+    }),
+
+  // Role Validation
+  check("role")
+    .isIn(["user", "guest"])
+    .withMessage("Role must be either 'user' or 'guest'"),
+
+  // Description Validation
+  check("description")
+    .optional({ checkFalsy: true })
+    .isLength({ min: 10 })
+    .withMessage("Description must be at least 10 characters long"),
+
+  // Final Middleware
+  (req, res, next) => {
+    const { username, email, password, confirmpassword, role, description } =
+      req.body;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).render("auth/usersignin", {
+        pageTitle: "Signup",
+        currentPage: "signup",
+        isloggedin: false,
+        errors: errors.array().map((err) => err.msg),
+        oldInput: { username, email, role, description },
+      });
+    }
+
+    bcrypt.hash(password, 12).then((hashedpassword) => {
+      const user = new User({
+        username: username,
+        email: email,
+        password: hashedpassword,
+        role: role,
+      });
+
+      user
+        .save()
+        .then(() => {
+          req.session.isloggedin = true;
+          req.session.save((err) => {
+            if (err) {
+              console.log("Session save error:", err);
+              return res.redirect("/usersignin");
+            }
+
+            console.log("Signup successful:", req.body);
+            return res.redirect("/");
+          });
+        })
+        .catch((err) => {
+          return res.status(422).render("auth/usersignin", {
+            pageTitle: "signup",
+            currentPage: "signup",
+            isloggedIn: false,
+            errors: [err.message],
+            oldInput: { username, email, role, description },
+          });
+        });
+    });
+  },
+];

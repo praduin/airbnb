@@ -53,9 +53,6 @@ app.use(userRouter);
 app.use("/host", hostRouter);
 
 // Home page or fallback
-app.get("/", (req, res) => {
-  res.send("Welcome to Airbnb Clone");
-});
 
 // Start server
 const PORT = 3000;

@@ -1,84 +1,100 @@
-<%- include('../partials/head') %> 
-<!-- OR directly add your <head> content below if not using partials -->
 
+<%- include('../partials/head') %>
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background-color: #f1f1f1;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(120deg, #f1f1f1 60%, #ffe3f1 100%);
+    min-height: 100vh;
+    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
   }
-
   .login-container {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 320px;
+    background: #fff;
+    padding: 2.5rem 2rem 2rem 2rem;
+    border-radius: 18px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+    width: 370px;
+    max-width: 95vw;
+    position: relative;
   }
-
   .login-container h2 {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
+    color: #ff006f;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 1px;
   }
-
-  .login-container input[type="text"],
-  .login-container input[type="email"],
-  .login-container input[type="password"] {
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+  }
+  input {
     width: 100%;
-    padding: 0.75rem;
-    margin: 0.5rem 0;
+    padding: 0.7rem;
     border: 1px solid #ccc;
     border-radius: 8px;
     box-sizing: border-box;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+    background: #fafafa;
+    transition: border-color 0.2s;
   }
-
+  input:focus {
+    border-color: #ff006f;
+    outline: none;
+  }
   .login-container button {
     width: 100%;
-    padding: 0.75rem;
-    background-color: #ff006f;
-    color: white;
+    padding: 0.85rem;
+    background: linear-gradient(90deg, #ff006f 60%, #ff7eb3 100%);
+    color: #fff;
     border: none;
     border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
-    margin-top: 1rem;
+    margin-top: 1.2rem;
+    box-shadow: 0 2px 8px rgba(255,0,111,0.08);
+    transition: background 0.2s;
   }
-
   .login-container button:hover {
-    background-color: #cc005c;
+    background: linear-gradient(90deg, #cc005c 60%, #ff7eb3 100%);
   }
 </style>
 
-</head>
 <body>
   <div class="login-container">
     <h2>User Login</h2>
+ <% if (errors && errors.length > 0) { %>
+  <ul style="color: red; background-color: #ffe5e5; padding: 10px; border: 1px solid red; border-radius: 5px; list-style-type: none; margin-bottom: 15px;">
+    <% errors.forEach(function(error) { %>
+      <li style="margin-bottom: 5px;"><%= error %></li>
+    <% }); %>
+  </ul>
+<% } %>
+
     <form action="/logindone" method="POST">
-      <input
-        type="text"
-        name="username"
-        placeholder="Enter your username"
-        required
-        autocomplete="username"
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Enter your email"
-        required
-        autocomplete="email"
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Enter your password"
-        required
-        minlength="6"
-        autocomplete="current-password"
-      />
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="6" autocomplete="current-password" />
+      </div>
       <button type="submit">Login</button>
     </form>
   </div>

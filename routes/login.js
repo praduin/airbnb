@@ -10,4 +10,7 @@ logi.get("/userlogin", log.getLogin);
 logi.post("/logindone", log.logindones);
 logi.get("/logout", log.logout);
 logi.post("/logout", log.postlogout);
+logi.get("/usersignin", log.usersignin);
+logi.post("/signindone", log.signindone);
+
 module.exports = logi;
