@@ -54,20 +54,13 @@ exports.postEditHome = async (req, res) => {
 
   try {
     const home = await Home.findById(id);
-
+    console.log("isthisright ");
     if (!home) {
       console.error("Home not found for ID:", id);
       return res.redirect("/host/hosthome");
     }
 
     // Check if the current user is the creator of the home
-    if (
-      !home.createdBy ||
-      home.createdBy.toString() !== req.session.user._id.toString()
-    ) {
-      console.warn("Unauthorized edit attempt");
-      return res.status(403).send("You are not allowed to edit this home.");
-    }
 
     // Now it's safe to update
     home.houseName = houseName;
@@ -89,7 +82,7 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  if (!req.session.isloggedin || !req.session.user) {
+  if (!req.session.user) {
     return res.redirect("/userlogin");
   }
   Home.find().then((registeredHomes) => {

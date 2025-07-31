@@ -9,11 +9,10 @@ const homeshema = mongose.Schema({
   numberOfNights: { type: Number, required: true },
   houseImages: { type: String, required: true },
   facilities: { type: String }, // ✅ Optional but useful
-  rating: { type: Number, required: true, min: 1, max: 5 },
+
   createdBy: {
     type: mongose.Schema.Types.ObjectId,
     ref: "user",
-    required: true,
   },
 
   createdBy: {
