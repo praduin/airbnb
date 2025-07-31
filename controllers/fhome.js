@@ -3,12 +3,13 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const User = require("../models/signin");
 const upload = multer({ dest: "uploads/" }); // ✅ fixed typo: "uplaods" -> "uploads"
-const Favorite = require("../models/favorite");
+
 const { check } = require("express-validator");
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
     isloggedin: req.isloggedin,
+    userRole: req.session.role,
     pageTitle: "Add Home to Airbnb",
     currentPage: "addhome",
     editing: false,
@@ -25,6 +26,7 @@ exports.getHome = (req, res, next) => {
     res.render("store/home-list", {
       registeredHomes,
       isloggedin: req.session.isloggedin,
+      userRole: req.session.role,
       pageTitle: "Homes List",
       currentPage: "home",
     });
@@ -80,6 +82,7 @@ exports.getIndex = (req, res, next) => {
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
+      userRole: req.session.role,
       isloggedin: req.session.isloggedin,
       pageTitle: "All Homes",
       currentPage: "home",
@@ -91,6 +94,7 @@ exports.gethosthome = (req, res, next) => {
   Home.find().then((registeredHomes) => {
     res.render("host/hosthome", {
       registeredHomes,
+      userRole: req.session.role,
       isloggedin: req.isloggedin,
       pageTitle: "Host Homes",
       currentPage: "hosthome",
@@ -109,6 +113,7 @@ exports.homepage = (req, res, next) => {
       res.render("store/home-list", {
         registeredHomes,
         isloggedin: req.isloggedin,
+        userRole: req.session.role,
         pageTitle: "All Homes",
         currentPage: "home",
       });
@@ -129,34 +134,33 @@ exports.getBookings = (req, res, next) => {
     pageTitle: "My Bookings",
     isloggedin: false,
     isloggedin: req.isloggedin,
+    userRole: req.session.role,
     currentPage: "bookings",
   });
 };
-exports.getfavrouited = (req, res, next) => {
+
+exports.getfavrouited = async (req, res, next) => {
   if (!req.session.isloggedin || !req.session.user) {
     return res.redirect("/userlogin");
   }
 
-  const userId = req.session.user._id;
+  try {
+    const userId = req.session.user._id;
+    const user = await User.findById(userId).populate("favorites");
 
-  Favorite.find({ userId })
-    .populate("homeId")
-    .then((favoriteList) => {
-      const favoriteHomes = favoriteList
-        .map((fav) => fav.homeId)
-        .filter((home) => home !== null);
+    console.log("Favorite Homes:", user.favorites); // ✅ correct variable
 
-      res.render("store/favoritehome", {
-        favoriteHomes,
-        isloggedin: true,
-        pageTitle: "My Favorites",
-        currentPage: "favourites",
-      });
-    })
-    .catch((err) => {
-      console.error("Error fetching favorites:", err);
-      res.status(500).send("Something went wrong");
+    res.render("store/favoritehome", {
+      favoriteHomes: user.favorites,
+      isloggedin: req.session.isloggedin,
+      userRole: req.session.role || null,
+      pageTitle: "My Favorites",
+      currentPage: "favourites",
     });
+  } catch (err) {
+    console.error("Error fetching favorites:", err);
+    res.redirect("/");
+  }
 };
 
 exports.getHomeDetail = (req, res, next) => {
@@ -174,6 +178,7 @@ exports.getHomeDetail = (req, res, next) => {
 
       res.render("store/home-detail", {
         isloggedin: req.isloggedin,
+        userRole: req.session.role,
         home: hom,
         pageTitle: "Home Detail",
         currentPage: "home",
@@ -184,7 +189,10 @@ exports.getHomeDetail = (req, res, next) => {
       res.status(500).send("Something went wrong");
     });
 };
-exports.postAddToFavorite = (req, res, next) => {
+
+// make sure it's imported
+
+exports.postAddToFavorite = async (req, res, next) => {
   if (!req.session.user) {
     return res.redirect("/userlogin");
   }
@@ -192,42 +200,52 @@ exports.postAddToFavorite = (req, res, next) => {
   const userId = req.session.user._id;
   const homeId = req.body.id;
 
-  Favorite.findOne({ homeId, userId })
-    .then((existingFavorite) => {
-      if (existingFavorite) {
-        console.log("Home already in favorites for this user");
-        return res.redirect("/favoritehome");
-      }
+  try {
+    const user = await User.findById(userId);
 
-      const fav = new Favorite({ homeId, userId });
-      return fav.save();
-    })
-    .then((result) => {
-      if (result) {
-        return res.redirect("/favoritehome");
-      }
-    })
-    .catch((err) => {
-      console.error("Error adding to favorites:", err);
-      res.status(500).send("Failed to add to favorites");
-    });
+    // Initialize favorites array if it doesn't exist
+    if (!user.favorites) {
+      user.favorites = [];
+    }
+
+    // Avoid adding duplicate favorites
+    if (!user.favorites.includes(homeId)) {
+      user.favorites.push(homeId);
+      await user.save();
+    }
+
+    res.redirect("/favoritehome");
+  } catch (err) {
+    console.error("Error adding favorite:", err);
+    res.status(500).send("Failed to add to favorites");
+  }
 };
 
 exports.postremoveFromFavorite = (req, res, next) => {
   const homeId = req.body.id;
+  const userId = req.session.user?._id;
 
-  if (!homeId || !homeId.match(/^[a-f\d]{24}$/i)) {
-    console.error("Invalid homeId:", homeId);
-    return res.redirect("/favoritehome", {});
+  if (!userId || !homeId || !homeId.match(/^[a-f\d]{24}$/i)) {
+    console.error("Invalid userId or homeId:", userId, homeId);
+    return res.redirect("/favoritehome");
   }
 
-  Favorite.findOneAndDelete({ homeId: homeId })
-    .then((result) => {
-      console.log("Home removed:", result);
+  User.findById(userId)
+    .then((user) => {
+      if (!user || !user.favorites) {
+        return res.redirect("/favoritehome");
+      }
+      // Remove the homeId from favorites array
+      user.favorites = user.favorites.filter(
+        (favId) => favId.toString() !== homeId
+      );
+      return user.save();
+    })
+    .then(() => {
       res.redirect("/favoritehome");
     })
     .catch((err) => {
-      console.error("Error removing home:", err);
+      console.error("Error removing home from favorites:", err);
       res.status(500).send("Failed to remove from favorites");
     });
 };
@@ -295,7 +313,7 @@ exports.getEditHome = (req, res, next) => {
 
       res.render("host/edit-home", {
         home,
-
+        userRole: req.session.role,
         pageTitle: "Edit Home",
         currentPage: "hosthome",
         editing: req.query.editing === "true", // ✅ use query param
@@ -313,6 +331,7 @@ exports.getLogin = (req, res, next) => {
     pageTitle: "User Login",
     errors: [],
     currentPage: "userlogin",
+    userRole: req.session.role,
     isloggedin: false,
   });
 }; // GET /userlogin
@@ -328,6 +347,7 @@ exports.logindones = async (req, res, next) => {
       return res.status(422).render("auth/userlogin", {
         pageTitle: "login",
         currentPage: "login",
+        userRole: req.session.role,
         isloggedin: false,
         errors: ["User does not exist"],
         oldInput: { email, username },
@@ -336,6 +356,10 @@ exports.logindones = async (req, res, next) => {
 
     req.session.isloggedin = true;
     req.session.user = user; // ✅ store full user in session
+    req.session.role = user.role;
+    console.log("found  user", user);
+    console.log("Found User:", user);
+    console.log("Session Role:", req.session.role);
 
     req.session.save((err) => {
       if (err) {
@@ -343,7 +367,12 @@ exports.logindones = async (req, res, next) => {
         return res.redirect("/userlogin");
       }
 
-      res.redirect("/");
+      console.log("indexpage");
+      console.log("it is ", req.session.role);
+      res.render("store/index", {
+        userRole: req.session.role,
+        isloggedin: req.session.isloggedin,
+      });
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -365,7 +394,11 @@ exports.logout = (req, res, next) => {
       expires: new Date(0), // clear cookie
     });
 
-    res.redirect("/userlogin");
+    res.render("auth/toboth", {
+      pageTitle: "in the first page",
+      userRole: req.session.role,
+      isloggedin: req.session.isloggedin,
+    });
   });
 };
 
@@ -378,6 +411,7 @@ exports.postlogout = (req, res, next) => {
     });
 
     res.render("host/index", {
+      userRole: req.session.role,
       errors: [],
     });
   });
@@ -388,6 +422,7 @@ exports.usersignin = (req, res, next) => {
   res.render("auth/usersignin", {
     pageTitle: "User Login",
     isloggedin: false,
+    userRole: req.session.role,
     currentPage: "userlogin",
     errors: [],
     oldInput: {
@@ -436,8 +471,9 @@ exports.signindone = [
 
   // Role Validation
   check("role")
-    .isIn(["user", "guest"])
-    .withMessage("Role must be either 'user' or 'guest'"),
+    .isIn(["Host", "guest"])
+
+    .withMessage("Role must be either 'Host' or 'guest'"),
 
   // Description Validation
   check("description")
@@ -455,6 +491,7 @@ exports.signindone = [
       return res.status(422).render("auth/usersignin", {
         pageTitle: "Signup",
         currentPage: "signup",
+        userRole: req.session.role,
         isloggedin: false,
         errors: errors.array().map((err) => err.msg),
         oldInput: { username, email, role, description },
@@ -473,14 +510,20 @@ exports.signindone = [
         .save()
         .then(() => {
           req.session.isloggedin = true;
+          req.session.role = user.role;
+          console.log("this is the role for you", req.session.role);
           req.session.save((err) => {
             if (err) {
               console.log("Session save error:", err);
-              return res.redirect("/usersignin");
+              return res.redirect("/");
             }
 
             console.log("Signup successful:", req.body);
-            return res.redirect("/");
+            console.log(req.session.role, " rhia ia rhw eRWR ");
+            return res.render("store/index", {
+              userRole: req.session.role,
+              isloggedin: req.session.isloggedin,
+            });
           });
         })
         .catch((err) => {
@@ -488,6 +531,7 @@ exports.signindone = [
             pageTitle: "signup",
             currentPage: "signup",
             isloggedIn: false,
+
             errors: [err.message],
             oldInput: { username, email, role, description },
           });

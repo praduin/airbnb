@@ -8,9 +8,11 @@
         <li><a href="/homes">Home list </a></li>
         <li><a href="/favoritehome">favorite</a></li>
         <li><a href="/booking-list">Booking List</a></li>
+     <% if(userRole === 'Host'){ %>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
-        
+        <%}%>
+         <li><a href="/logout">logout</a></li>
       </ul>
     </nav>
   <!-- ✅ Main Content -->

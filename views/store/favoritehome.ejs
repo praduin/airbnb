@@ -8,14 +8,17 @@
         <li><a href="/homes">Home list </a></li>
         <li><a href="/favoritehome">favorite</a></li>
         <li><a href="/booking-list">Booking List</a></li>
+<% if(userRole === 'Host'){ %>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
-         
+        <%}%>
+          <li><a href="/logout">logout</a></li>
       </ul>
     </nav>
   <h1> the favorite item are present here </h1>
     <!-- Main Heading -->
    <main class="card-container">
+    <% if (Array.isArray(favoriteHomes)) { %>
     <%favoriteHomes.forEach((home) => { %>
       <div class="card">
         <img
@@ -43,6 +46,9 @@
       </div>
      
     <% }) %>
+    <% } else {%> 
+      <P> no favorites found </P> 
+      <% } %> 
      </main>
   </body>
 </html>

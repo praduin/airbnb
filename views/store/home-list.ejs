@@ -9,9 +9,11 @@
         <li><a href="/homes">Home list </a></li>
         <li><a href="/favoritehome">favorite</a></li>
         <li><a href="/booking-list">Booking List</a></li>
+ <% if(userRole === 'Host'){ %>
         <li><a href="/host/hosthome">host home </a></li>
         <li><a href="/host/add-home">Add Home</a></li>
-      
+        <%}%>
+       <li><a href="/logout">logout</a></li>
     </nav>
   <main class="card-container">
     <% registeredHomes.forEach((home) => { %>
@@ -30,22 +32,15 @@
           <p><strong>Facilities:</strong> <%= home.facilities %></p>
      
           <br> 
-<a class="bookButton" 
-   href="/homes/<%= home._id.toString() %>" 
-   style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border: none; border-radius: 5px; cursor: pointer; text-align: center;">
-   🔍 View Details
-</a>
+<a class="bookButton" href="/homes/<%= home._id.toString() %>">detail</a>
 
-
-           
-          
-
-  <form action="/favoritehome" method="POST" style="margin-top: 10px; text-align: center;">
+           <br> 
+           <br>
+<form action="/favoritehome" method="POST" style="display: inline;">
   <input type="hidden" name="id" value="<%= home._id %>">
-  <button type="submit" style="padding: 10px 20px; background-color: #ff5a5f; color: white; border: none; border-radius: 5px; cursor: pointer;">
-    ❤️ Add to Favorites
-  </button>
+  <button type="submit" class="btn btn-favorite">❤️ Add to Favorites</button>
 </form>
+
 
          
         </div>
