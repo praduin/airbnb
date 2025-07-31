@@ -1,6 +1,6 @@
 const { ObjectId } = require("mongodb");
 const mongose = require("mongoose");
-const Favorite = require("./favorite"); // Ensure this path is correct
+
 const homeshema = mongose.Schema({
   houseName: { type: String, required: true },
   location: { type: String, required: true },
@@ -9,6 +9,18 @@ const homeshema = mongose.Schema({
   numberOfNights: { type: Number, required: true },
   houseImages: { type: String, required: true },
   facilities: { type: String }, // ✅ Optional but useful
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  createdBy: {
+    type: mongose.Schema.Types.ObjectId,
+    ref: "user",
+    required: true,
+  },
+
+  createdBy: {
+    type: mongose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 homeshema.pre("findOneAndDelete", async function (next) {

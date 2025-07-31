@@ -8,7 +8,7 @@ const { check } = require("express-validator");
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
-    isloggedin: req.isloggedin,
+    isloggedin: req.session.isloggedin,
     userRole: req.session.role,
     pageTitle: "Add Home to Airbnb",
     currentPage: "addhome",
@@ -32,6 +32,7 @@ exports.getHome = (req, res, next) => {
     });
   });
 };
+
 exports.postEditHome = async (req, res) => {
   const id = req.params.homeId;
 
@@ -59,6 +60,16 @@ exports.postEditHome = async (req, res) => {
       return res.redirect("/host/hosthome");
     }
 
+    // Check if the current user is the creator of the home
+    if (
+      !home.createdBy ||
+      home.createdBy.toString() !== req.session.user._id.toString()
+    ) {
+      console.warn("Unauthorized edit attempt");
+      return res.status(403).send("You are not allowed to edit this home.");
+    }
+
+    // Now it's safe to update
     home.houseName = houseName;
     home.facilities = facilities;
     home.location = location;
@@ -78,7 +89,9 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  console.log("session value", req.session);
+  if (!req.session.isloggedin || !req.session.user) {
+    return res.redirect("/userlogin");
+  }
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
@@ -91,11 +104,20 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.gethosthome = (req, res, next) => {
-  Home.find().then((registeredHomes) => {
+  console.log("Session at gethosthome:", req.session);
+  if (!req.session.isloggedin || !req.session.user) {
+    return res.redirect("/userlogin");
+  }
+  const isSuperHost =
+    req.session.user.email &&
+    req.session.user.email.toLowerCase() === "pardiumsharma2590@gmail.com";
+  const query = isSuperHost ? {} : { createdBy: req.session.user._id };
+  Home.find(query).then((registeredHomes) => {
     res.render("host/hosthome", {
       registeredHomes,
       userRole: req.session.role,
-      isloggedin: req.isloggedin,
+      isloggedin: req.session.isloggedin,
+      user: req.session.user,
       pageTitle: "Host Homes",
       currentPage: "hosthome",
     });
@@ -112,7 +134,7 @@ exports.homepage = (req, res, next) => {
     .then(([registeredHomes]) => {
       res.render("store/home-list", {
         registeredHomes,
-        isloggedin: req.isloggedin,
+        isloggedin: req.session.isloggedin,
         userRole: req.session.role,
         pageTitle: "All Homes",
         currentPage: "home",
@@ -132,8 +154,7 @@ exports.getBookings = (req, res, next) => {
 
   res.render("store/booking", {
     pageTitle: "My Bookings",
-    isloggedin: false,
-    isloggedin: req.isloggedin,
+    isloggedin: req.session.isloggedin,
     userRole: req.session.role,
     currentPage: "bookings",
   });
@@ -177,7 +198,7 @@ exports.getHomeDetail = (req, res, next) => {
       }
 
       res.render("store/home-detail", {
-        isloggedin: req.isloggedin,
+        isloggedin: req.session.isloggedin,
         userRole: req.session.role,
         home: hom,
         pageTitle: "Home Detail",
@@ -285,6 +306,7 @@ exports.getData = (req, res, next) => {
     numberOfNights,
     houseImages,
     facilities,
+    createdBy: req.session.user._id,
   });
 
   home
@@ -295,10 +317,10 @@ exports.getData = (req, res, next) => {
       res.status(500).send("Something went wrong");
     });
 };
-
 exports.getEditHome = (req, res, next) => {
-  const homeId = req.params.homeId; // ✅ CORRECT param
-
+  const homeId = req.params.homeId;
+  console.log("home id is here", homeId);
+  console.log(req.session.role);
   if (!homeId) {
     return res.redirect("/host/hosthome");
   }
@@ -311,12 +333,19 @@ exports.getEditHome = (req, res, next) => {
         return res.redirect("/host/hosthome");
       }
 
+      // ✅ Ownership check
+      if (home.createdBy.toString() !== req.session.user._id.toString()) {
+        console.warn("Unauthorized access attempt to edit home");
+        return res.status(403).send("You are not allowed to edit this home.");
+      }
+
       res.render("host/edit-home", {
         home,
         userRole: req.session.role,
         pageTitle: "Edit Home",
         currentPage: "hosthome",
-        editing: req.query.editing === "true", // ✅ use query param
+        editing: req.query.editing === "true",
+        user: req.session.user, //
       });
     })
     .catch((err) => {
@@ -355,7 +384,12 @@ exports.logindones = async (req, res, next) => {
     }
 
     req.session.isloggedin = true;
-    req.session.user = user; // ✅ store full user in session
+    req.session.user = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    };
     req.session.role = user.role;
     console.log("found  user", user);
     console.log("Found User:", user);
@@ -366,13 +400,8 @@ exports.logindones = async (req, res, next) => {
         console.error("Session save error:", err);
         return res.redirect("/userlogin");
       }
-
-      console.log("indexpage");
-      console.log("it is ", req.session.role);
-      res.render("store/index", {
-        userRole: req.session.role,
-        isloggedin: req.session.isloggedin,
-      });
+      // Redirect after login to ensure session is available on next request
+      res.redirect("/");
     });
   } catch (err) {
     console.error("Login error:", err);
