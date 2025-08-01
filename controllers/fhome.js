@@ -82,9 +82,6 @@ exports.postEditHome = async (req, res) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect("/userlogin");
-  }
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes,
