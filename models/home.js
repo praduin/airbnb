@@ -22,9 +22,13 @@ const homeshema = mongose.Schema({
   },
 });
 
+const User = require("./signin");
 homeshema.pre("findOneAndDelete", async function (next) {
   const homeId = this.getQuery()["_id"];
-  await Favorite.deleteMany({ homeId: homeId });
+  await User.updateMany(
+    { favorites: homeId },
+    { $pull: { favorites: homeId } }
+  );
   next();
 });
 

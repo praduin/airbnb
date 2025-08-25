@@ -1,12 +1,11 @@
 const Home = require("../models/home");
-const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const User = require("../models/signin");
-const upload = multer({ dest: "uploads/" }); // ✅ fixed typo: "uplaods" -> "uploads"
 
 const { check } = require("express-validator");
 
 exports.getAddHome = (req, res, next) => {
+  console.log("this is in getaddhomecontrollers");
   res.render("host/edit-home", {
     isloggedin: req.session.isloggedin,
     userRole: req.session.role,
@@ -18,7 +17,6 @@ exports.getAddHome = (req, res, next) => {
 
 exports.getHome = (req, res, next) => {
   if (!req.session.isloggedin) {
-    console.log("thiis is in sign in page ");
     return res.redirect("/userlogin");
   }
 
@@ -50,13 +48,12 @@ exports.postEditHome = async (req, res) => {
     ? parseInt(req.body.numberOfNights)
     : null;
 
-  const houseImages = req.file ? req.file.filename : req.body.existingImage;
+  const houseImages = req.file ? req.file.path : req.body.existingImage;
 
   try {
     const home = await Home.findById(id);
-    console.log("isthisright ");
+
     if (!home) {
-      console.error("Home not found for ID:", id);
       return res.redirect("/host/hosthome");
     }
 
@@ -73,10 +70,8 @@ exports.postEditHome = async (req, res) => {
 
     await home.save();
 
-    console.log("Home updated successfully");
     res.redirect("/host/hosthome");
   } catch (err) {
-    console.error("Error updating home:", err);
     res.status(500).send("Failed to update home");
   }
 };
@@ -94,7 +89,6 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.gethosthome = (req, res, next) => {
-  console.log("Session at gethosthome:", req.session);
   if (!req.session.isloggedin || !req.session.user) {
     return res.redirect("/userlogin");
   }
@@ -116,7 +110,6 @@ exports.gethosthome = (req, res, next) => {
 
 exports.homepage = (req, res, next) => {
   if (!req.session.isloggedin) {
-    console.log("thiis is in sign in page ");
     return res.redirect("/userlogin");
   }
 
@@ -131,14 +124,12 @@ exports.homepage = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.error("Error fetching homes:", err);
       res.status(500).send("Database error");
     });
 };
 
 exports.getBookings = (req, res, next) => {
   if (!req.session.isloggedin) {
-    console.log("thiis is in sign in page ");
     return res.redirect("/userlogin");
   }
 
@@ -159,8 +150,6 @@ exports.getfavrouited = async (req, res, next) => {
     const userId = req.session.user._id;
     const user = await User.findById(userId).populate("favorites");
 
-    console.log("Favorite Homes:", user.favorites); // ✅ correct variable
-
     res.render("store/favoritehome", {
       favoriteHomes: user.favorites,
       isloggedin: req.session.isloggedin,
@@ -169,7 +158,6 @@ exports.getfavrouited = async (req, res, next) => {
       currentPage: "favourites",
     });
   } catch (err) {
-    console.error("Error fetching favorites:", err);
     res.redirect("/");
   }
 };
@@ -196,7 +184,6 @@ exports.getHomeDetail = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.error("Database error:", err);
       res.status(500).send("Something went wrong");
     });
 };
@@ -227,7 +214,6 @@ exports.postAddToFavorite = async (req, res, next) => {
 
     res.redirect("/favoritehome");
   } catch (err) {
-    console.error("Error adding favorite:", err);
     res.status(500).send("Failed to add to favorites");
   }
 };
@@ -237,7 +223,6 @@ exports.postremoveFromFavorite = (req, res, next) => {
   const userId = req.session.user?._id;
 
   if (!userId || !homeId || !homeId.match(/^[a-f\d]{24}$/i)) {
-    console.error("Invalid userId or homeId:", userId, homeId);
     return res.redirect("/favoritehome");
   }
 
@@ -256,23 +241,38 @@ exports.postremoveFromFavorite = (req, res, next) => {
       res.redirect("/favoritehome");
     })
     .catch((err) => {
-      console.error("Error removing home from favorites:", err);
       res.status(500).send("Failed to remove from favorites");
     });
 };
 exports.deletehomewithid = async (req, res, next) => {
-  const homeId = req.params.homeId; // <- FIXED: match this with your route param
-
+  const homeId = req.params.homeId;
   try {
+    const home = await Home.findById(homeId);
+    if (!home) {
+      return res.status(404).send("Home not found.");
+    }
+    // Check if user is creator or admin
+    const isAdmin =
+      req.session.user &&
+      req.session.user.email &&
+      req.session.user.email.toLowerCase() === "pardiumsharma2590@gmail.com";
+    const isCreator =
+      req.session.user &&
+      home.createdBy &&
+      String(home.createdBy) === String(req.session.user._id);
+    if (!isAdmin && !isCreator) {
+      return res.status(403).send("Unauthorized: You cannot delete this home.");
+    }
     await Home.findByIdAndDelete(homeId);
     res.redirect("/host/hosthome");
   } catch (err) {
-    console.error("Error in deleting:", err);
     res.status(500).send("Failed to delete home.");
   }
 };
 
 exports.getData = (req, res, next) => {
+  console.log("req", req.body);
+  console.log("this is in getdata controllers");
   const houseName = req.body.houseName?.trim() || null;
   const pricePerDay = /^\d+$/.test(req.body.pricePerDay)
     ? parseInt(req.body.pricePerDay)
@@ -286,7 +286,7 @@ exports.getData = (req, res, next) => {
     ? parseInt(req.body.numberOfNights)
     : null;
 
-  const houseImages = req.file ? req.file.filename : null;
+  const houseImages = req.file ? req.file.path : null;
 
   const home = new Home({
     houseName,
@@ -303,19 +303,15 @@ exports.getData = (req, res, next) => {
     .save()
     .then(() => res.redirect("/homes"))
     .catch((err) => {
-      console.error("Error saving home:", err);
-      res.status(500).send("Something went wrong");
+      res.status(500).send(err.message || "Something went wrong");
     });
 };
 exports.getEditHome = (req, res, next) => {
   const homeId = req.params.homeId;
-  console.log("home id is here", homeId);
-  console.log(req.session.role);
+
   if (!homeId) {
     return res.redirect("/host/hosthome");
   }
-
-  console.log("findById called with homeId:", homeId);
 
   Home.findById(homeId)
     .then((home) => {
@@ -325,7 +321,6 @@ exports.getEditHome = (req, res, next) => {
 
       // ✅ Ownership check
       if (home.createdBy.toString() !== req.session.user._id.toString()) {
-        console.warn("Unauthorized access attempt to edit home");
         return res.status(403).send("You are not allowed to edit this home.");
       }
 
@@ -339,13 +334,11 @@ exports.getEditHome = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.error("Error fetching home for edit:", err);
       res.status(500).send("Failed to load home for editing");
     });
 };
 
 exports.getLogin = (req, res, next) => {
-  console.log("you are locate in userlogin ");
   res.render("auth/userlogin", {
     pageTitle: "User Login",
     errors: [],
@@ -381,20 +374,15 @@ exports.logindones = async (req, res, next) => {
       role: user.role,
     };
     req.session.role = user.role;
-    console.log("found  user", user);
-    console.log("Found User:", user);
-    console.log("Session Role:", req.session.role);
 
     req.session.save((err) => {
       if (err) {
-        console.error("Session save error:", err);
         return res.redirect("/userlogin");
       }
       // Redirect after login to ensure session is available on next request
       res.redirect("/");
     });
   } catch (err) {
-    console.error("Login error:", err);
     res.redirect("/userlogin");
   }
 };
@@ -404,14 +392,13 @@ exports.logout = (req, res, next) => {
   req.session.isloggedin = false;
 
   req.session.save((err) => {
-    if (err) console.log("Session save error:", err);
-
-    // ✅ Clear the cookie
-    res.cookie("isloggedin", false, {
-      httpOnly: true,
-      errors: [],
-      expires: new Date(0), // clear cookie
-    });
+    if (err)
+      // ✅ Clear the cookie
+      res.cookie("isloggedin", false, {
+        httpOnly: true,
+        errors: [],
+        expires: new Date(0), // clear cookie
+      });
 
     res.render("auth/toboth", {
       pageTitle: "in the first page",
@@ -437,7 +424,6 @@ exports.postlogout = (req, res, next) => {
 };
 
 exports.usersignin = (req, res, next) => {
-  console.log("You are on the login page");
   res.render("auth/usersignin", {
     pageTitle: "User Login",
     isloggedin: false,
@@ -530,15 +516,12 @@ exports.signindone = [
         .then(() => {
           req.session.isloggedin = true;
           req.session.role = user.role;
-          console.log("this is the role for you", req.session.role);
+
           req.session.save((err) => {
             if (err) {
-              console.log("Session save error:", err);
               return res.redirect("/");
             }
 
-            console.log("Signup successful:", req.body);
-            console.log(req.session.role, " rhia ia rhw eRWR ");
             return res.render("store/index", {
               userRole: req.session.role,
               isloggedin: req.session.isloggedin,

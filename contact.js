@@ -47,10 +47,16 @@ app.use("/host", (req, res, next) => {
   } else res.redirect("/userlogin");
 });
 
-// Use host routes
+// Routers
 app.use(loginRouter);
 app.use(userRouter);
 app.use("/host", hostRouter);
+
+// Global error handler for Multer and other errors
+app.use(function (err, req, res, next) {
+  console.error("Global error handler:", err);
+  res.status(500).send(err.message || "Server error");
+});
 
 // Home page or fallback
 
@@ -67,5 +73,8 @@ mongoose
     });
   })
   .catch((err) => {
-    console.error("Failed to connect to MongoDB using Mongoose", err);
+    console.error(
+      "Failed to connect to MongoDB using Mongoose",
+      JSON.stringify(err, null, 2)
+    );
   });

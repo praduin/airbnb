@@ -47,7 +47,7 @@
       <input type="text" id="location" name="location" placeholder="City, State" value="<%= editing && home ? home.location : '' %>" required>
 
       <label for="houseImage">Upload House Image</label>
-      <input type="file" id="houseImage" name="houseImage" accept="image/*" <%= editing ? '' : 'required' %>>
+  <input type="file" id="houseImages" name="houseImages" accept="image/*" <%= editing ? '' : 'required' %>>
 
       <label for="numberOfNights">Number of Nights</label>
       <input type="number" id="numberOfNights" name="numberOfNights" min="1" value="<%= editing && home ? home.numberOfNights : '' %>" required>
