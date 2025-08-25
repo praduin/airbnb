@@ -61,7 +61,7 @@ app.use(function (err, req, res, next) {
 // Home page or fallback
 
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 mongoose
   .connect(dbpath)
