@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -10,8 +11,7 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const hostRouter = require("./routes/hostrouter");
 const userRouter = require("./routes/userrouter");
 const loginRouter = require("./routes/login");
-const dbpath =
-  "mongodb+srv://praduin:root@completeairbnb.ki07pmq.mongodb.net/airbnb?retryWrites=true&w=majority&appName=completeairbnb";
+const dbpath = process.env.MONGODB_URI;
 
 // Middleware to parse form data
 app.use(express.urlencoded({ extended: false }));
